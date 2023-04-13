@@ -15,12 +15,11 @@ param principalId string = ''
 param appServicePlanName string = ''
 param resourceGroupName string = ''
 param openAiServiceName string = ''
-param openAiResourceGroupName string = ''
-param openAiResourceGroupLocation string = location
 param apimServiceName string = ''
 param logAnalyticsName string = ''
 param applicationInsightsDashboardName string = ''
 param applicationInsightsName string = ''
+param useAOI bool = true
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
@@ -31,10 +30,6 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
   name: !empty(resourceGroupName) ? resourceGroupName : '${abbrs.resourcesResourceGroups}${environmentName}'
   location: location
   tags: tags
-}
-
-resource openAiResourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' existing = if (!empty(openAiResourceGroupName)) {
-  name: !empty(openAiResourceGroupName) ? openAiResourceGroupName : resourceGroup.name
 }
 
 // The application frontend
@@ -80,33 +75,20 @@ module apim './core/gateway/apim.bicep' = {
 }
 
 param openAiSkuName string = 'S0'
-param gptDeploymentName string = 'davinci'
-param gptModelName string = 'text-davinci-003'
 param chatGptDeploymentName string = 'chat'
 param chatGptModelName string = 'gpt-35-turbo'
 
 module openAi 'core/ai/cognitiveservices.bicep' = {
   name: 'openai'
-  scope: openAiResourceGroup
+  scope: resourceGroup
   params: {
     name: !empty(openAiServiceName) ? openAiServiceName : '${abbrs.cognitiveServicesAccounts}${resourceToken}'
-    location: openAiResourceGroupLocation
+    location: location
     tags: tags
     sku: {
       name: openAiSkuName
     }
     deployments: [
-      {
-        name: gptDeploymentName
-        model: {
-          format: 'OpenAI'
-          name: gptModelName
-          version: '1'
-        }
-        scaleSettings: {
-          scaleType: 'Standard'
-        }
-      }
       {
         name: chatGptDeploymentName
         model: {
@@ -124,13 +106,15 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
 
 
 // App outputs
-output AZURE_LOCATION string = location
-output AZURE_OPENAI_SERVICE string = openAi.outputs.name
-output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
-output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
-output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
-output AZURE_OPENAI_CHATGPT_KEY string = openAi.outputs.key
-output AZURE_APIM_OPENURL string = '${apimServiceName}.developer.azure-api.net}'
+
+
+output AOI_DEPLOYMENT string = chatGptDeploymentName
+output AOI_APIKEY string = openAi.outputs.key
+output AOI_ENDPOINT string = openAi.outputs.endpoint
+output AZURE_APIM_OPENURL string = '${apim.outputs.apimServiceName}.developer.azure-api.net'
+output APIM_RESROUCEID string ='${subscription().id}/resourceGroups/${resourceGroup.name}/providers/Microsoft.ApiManagement/service/${apim.outputs.apimServiceName}'
+output AOI_ENABLED bool = useAOI
+
 
 
 
