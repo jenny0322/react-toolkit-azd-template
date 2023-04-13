@@ -1,3 +1,0 @@
-[submodule "source"]
-	path = source
-	url = git@github.com:MicrosoftCSA/react-component-toolkit.git
