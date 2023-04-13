@@ -129,6 +129,7 @@ output AZURE_OPENAI_SERVICE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
+output AZURE_OPENAI_CHATGPT_KEY string = openAi.outputs.key
 output AZURE_APIM_OPENURL string = '${apimServiceName}.developer.azure-api.net}'
 
 
