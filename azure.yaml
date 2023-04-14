@@ -3,7 +3,7 @@
 name: react-toolkit-azd-template
 hooks:
   postprovision:
-    shell: pwsh
-    run: ./hooks/postprovision.ps1
+    shell: sh
+    run: ./hooks/postprovision.sh
     continueOnError: false
     interactive: true
