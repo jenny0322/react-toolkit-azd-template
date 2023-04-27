@@ -1,9 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
 name: react-toolkit-azd-template
+
 hooks:
   postprovision:
-    shell: sh
-    run: ./hooks/postprovision.sh
-    continueOnError: false
-    interactive: true
+    windows:
+      shell: pwsh
+      run: ./hooks/postprovision.ps1
+      interactive: true
+      continueOnError: false
+    posix:
+      shell: sh
+      run: chmod a+x ./hooks/postprovision.sh
+      interactive: true
+      continueOnError: false
+
