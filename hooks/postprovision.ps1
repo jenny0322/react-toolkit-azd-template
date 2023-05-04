@@ -1,23 +1,30 @@
-$env:Path = "../.azure/react-toolkit/.env"
+# ensure tools are found
+$nodeCmd = Get-Command node
+$npmCmd = Get-Command npm
+$gitCmd = Get-Command git
 
-git clone git@github.com:MicrosoftCSA/react-component-toolkit.git 
-
+# git clone and checkouot
+Start-Process -FilePath ($gitCmd).Source -ArgumentList "clone git@github.com:MicrosoftCSA/react-component-toolkit.git" -Wait -NoNewWindow
 Set-Location ./react-component-toolkit
+Start-Process -FilePath ($gitCmd).Source -ArgumentList "checkout dev" -Wait -NoNewWindow
 
-git checkout dev
-
-node install.mjs
+# install.mjs
+Start-Process -FilePath ($nodeCmd).Source -ArgumentList "install.mjs" -Wait -NoNewWindow
 
 $continue = $true  
   
 while ($continue) {  
     $description = Read-Host "Enter a description for the new React component"  
-    node createnew.mjs "$($description)"  
+    
+    # createnew.mjs
+    Start-Process -FilePath ($nodeCmd).Source -ArgumentList "createnew.mjs $($description)" -Wait -NoNewWindow
   
-    $test = Read-Host "Would you like to test the component? (y/N)"  
+    $test = Read-Host "Would you like to test the component? (y/N)"
     if ($test -eq "y") 
     {  
-        npm run ladle:dev  
+        # ladle:dev - as background job - 
+        Write-Host "Lauching ladle..."  
+        $ladle = Start-Job -FilePath ../hooks/ladle-dev.ps1
     }  
   
     $package = Read-Host "Would you like to package the component as an Azure API Management developer portal widget and test it? (y/N)"  
@@ -34,8 +41,9 @@ while ($continue) {
             $componentName = Read-Host "Enter the name of the component to publish to Azure API Management"  
 
             if ($components.Name -contains $componentName) {  
-                if (Test-Path "./src/components/$componentName") {  
-                    node packagewidget.mjs "$($componentName)"  
+                if (Test-Path "./src/components/$componentName") {
+                    # packagewidget.mjs
+                    Start-Process -FilePath ($nodeCmd).Source -ArgumentList "packagewidget.mjs $($componentName)" -Wait -NoNewWindow
                 } else {  
                     Write-Host "Component directory does not exist."  
                     Continue  
@@ -50,7 +58,9 @@ while ($continue) {
   
     $continue = Read-Host "Do you want to create another component? (y/N)"  
     if ($continue -ne "y") {  
-        $continue = $false  
-    }  
+        $continue = $false
+    }
 }  
+# stop all backgroung jobs
+Get-Job | Stop-Job
 
